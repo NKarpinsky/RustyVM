@@ -3,6 +3,7 @@ mod vm;
 use vm::VirtualMachine;
 use std::env;
 
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let Some(program_path) = args.get(1) else {
@@ -15,3 +16,7 @@ fn main() {
         Err(err) => println!("Error occured while loading program into virtual machine: {}", err.to_string())
     }
 }
+
+
+#[cfg(test)]
+mod tests;

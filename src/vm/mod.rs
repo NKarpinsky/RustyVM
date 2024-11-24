@@ -1,43 +1,25 @@
 mod bytecode;
 
+use core::panic;
 use std::thread::JoinHandle;
 use std::{error::Error, fs, io::Read};
 use std::collections::HashMap;
-use std::process::exit;
 use bytecode::Bytecode;
-
+use bytecode::handlers::*;
 
 
 type BytecodeHandler = fn (&mut VirtualMachine) -> ();
 
-enum Registers {
-    r0,
-    r1,
-    r2,
-    r3,
-}
-
 pub struct VirtualMachine {
-    r0: i64,
-    r1: i64,
-    r2: i64,
-    r3: i64,
-    rip: u64,
-    rflags: u8,
-    program: Vec<u8>,
+    pub regs: [i64; 256],
+    pub rip: u64,
+    pub rflags: u8,
+    pub program: Vec<u8>,
+    executing: bool,
     handlers: HashMap<Bytecode, BytecodeHandler>
 }
 
-fn nop_handler(vm: &mut VirtualMachine) -> () {
-    vm.rip += 1;
-}
-fn hlt_handler(vm: &mut VirtualMachine) -> () {
-    let exit_code: i32 = vm.r0.try_into().unwrap_or(-1);
-    exit(exit_code);
-}
-fn mov_handler(vm: &mut VirtualMachine) -> () {}
-fn add_handler(vm: &mut VirtualMachine) -> () {}
-fn sub_handler(vm: &mut VirtualMachine) -> () {}
+
 
 fn init_handlers() -> HashMap<Bytecode, BytecodeHandler> {
     let mut handlers = HashMap::new();
@@ -46,6 +28,8 @@ fn init_handlers() -> HashMap<Bytecode, BytecodeHandler> {
     handlers.insert(Bytecode::Mov, mov_handler as BytecodeHandler);
     handlers.insert(Bytecode::Add, add_handler as BytecodeHandler);
     handlers.insert(Bytecode::Sub, sub_handler as BytecodeHandler);
+    handlers.insert(Bytecode::Mul, mul_handler as BytecodeHandler);
+    handlers.insert(Bytecode::Div, div_handler as BytecodeHandler);
 
     return handlers;
 }
@@ -56,11 +40,12 @@ impl VirtualMachine {
         let mut file = fs::File::open(path)?;
         let mut buf: Vec<u8> = vec![];
         let result = file.read_to_end(&mut buf)?;
-        Ok(VirtualMachine {r0: 0, r1: 0, r2: 0, r3: 0, rip: 0, rflags: 0, program: buf, handlers: init_handlers()})
+        Ok(VirtualMachine {regs: [0; 256], rip: 0, rflags: 0, program: buf, handlers: init_handlers(), executing: false})
     }
 
     pub fn execute(&mut self) {
-        loop {
+        self.executing = true;
+        while self.executing {
             let rip: usize = self.rip.try_into().unwrap();
             let opcode = self.program[rip];
             let bytecode = opcode.try_into().expect("Unknown bytecode");
