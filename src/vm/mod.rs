@@ -28,7 +28,9 @@ pub struct VirtualMachine {
     handlers: HashMap<Bytecode, BytecodeHandler>
 }
 
-fn nop_handler(vm: &mut VirtualMachine) -> () {}
+fn nop_handler(vm: &mut VirtualMachine) -> () {
+    vm.rip += 1;
+}
 fn hlt_handler(vm: &mut VirtualMachine) -> () {
     let exit_code: i32 = vm.r0.try_into().unwrap_or(-1);
     exit(exit_code);
@@ -61,7 +63,7 @@ impl VirtualMachine {
         loop {
             let rip: usize = self.rip.try_into().unwrap();
             let opcode = self.program[rip];
-            let bytecode = opcode as Bytecode;
+            let bytecode = opcode.try_into().expect("Unknown bytecode");
             self.handlers[&bytecode](self);
         }
     }
