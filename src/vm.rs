@@ -1,6 +1,7 @@
 use std::thread::JoinHandle;
 use std::{error::Error, fs, io::Read};
 use std::collections::HashMap;
+use std::process::exit;
 
 #[derive(PartialEq, Eq, Hash)]
 enum Bytecode {
@@ -47,7 +48,10 @@ pub struct VirtualMachine {
 }
 
 fn nop_handler(vm: &mut VirtualMachine) -> () {}
-fn hlt_handler(vm: &mut VirtualMachine) -> () {}
+fn hlt_handler(vm: &mut VirtualMachine) -> () {
+    let exit_code: i32 = vm.r0.try_into().unwrap_or(-1);
+    exit(exit_code);
+}
 fn mov_handler(vm: &mut VirtualMachine) -> () {}
 fn add_handler(vm: &mut VirtualMachine) -> () {}
 fn sub_handler(vm: &mut VirtualMachine) -> () {}
@@ -73,5 +77,8 @@ impl VirtualMachine {
     }
 
     pub fn execute(&self) {
+        loop {
+            
+        }
     }
 }
