@@ -1,31 +1,12 @@
+mod bytecode;
+
 use std::thread::JoinHandle;
 use std::{error::Error, fs, io::Read};
 use std::collections::HashMap;
 use std::process::exit;
+use bytecode::Bytecode;
 
-#[derive(PartialEq, Eq, Hash)]
-enum Bytecode {
-    Nop,
-    Hlt,
-    Mov,
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Shl,
-    Shr,
-    Jmp,
-    Je,
-    Jne,
-    Jl,
-    Jg,
-    Not,
-    And,
-    Or,
-    Cmp,
-    Xor,
-    Int
-}
+
 
 type BytecodeHandler = fn (&mut VirtualMachine) -> ();
 
@@ -76,9 +57,12 @@ impl VirtualMachine {
         Ok(VirtualMachine {r0: 0, r1: 0, r2: 0, r3: 0, rip: 0, rflags: 0, program: buf, handlers: init_handlers()})
     }
 
-    pub fn execute(&self) {
+    pub fn execute(&mut self) {
         loop {
-            
+            let rip: usize = self.rip.try_into().unwrap();
+            let opcode = self.program[rip];
+            let bytecode = opcode as Bytecode;
+            self.handlers[&bytecode](self);
         }
     }
 }
