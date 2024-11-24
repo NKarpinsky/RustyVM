@@ -30,6 +30,8 @@ fn init_handlers() -> HashMap<Bytecode, BytecodeHandler> {
     handlers.insert(Bytecode::Sub, sub_handler as BytecodeHandler);
     handlers.insert(Bytecode::Mul, mul_handler as BytecodeHandler);
     handlers.insert(Bytecode::Div, div_handler as BytecodeHandler);
+    handlers.insert(Bytecode::Shl, shl_handler as BytecodeHandler);
+    handlers.insert(Bytecode::Shr, shr_handler as BytecodeHandler);
 
     return handlers;
 }

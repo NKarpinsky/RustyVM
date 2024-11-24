@@ -61,4 +61,19 @@ mod tests {
         assert_eq!(vm.regs[1], 0xC0FFEE);
         assert_eq!(vm.regs[2], 0xDEADC0DE * 0xC0FFEE);
     }
+
+    #[test]
+    fn run_shl_shr_program() {
+        let program = "tests_data/shl_shr_program.rvm";
+        let vm = VirtualMachine::new(&program);
+        assert!(vm.is_ok());
+        let Ok(mut vm) = vm else {
+            assert!(false);
+            return;
+        };
+        vm.execute();
+        assert_eq!(vm.regs[0], 0xDEADC0DE >> 0x13);
+        assert_eq!(vm.regs[1], 8);
+        assert_eq!(vm.regs[2], 0xDEADC0DE << 8);
+    }
 }
