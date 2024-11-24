@@ -33,6 +33,7 @@ fn init_handlers() -> HashMap<Bytecode, BytecodeHandler> {
     handlers.insert(Bytecode::Xor, xor_handler as BytecodeHandler);
     handlers.insert(Bytecode::And, and_handler as BytecodeHandler);
     handlers.insert(Bytecode::Or, or_handler as BytecodeHandler);
+    handlers.insert(Bytecode::Not, not_handler as BytecodeHandler);
 
     return handlers;
 }

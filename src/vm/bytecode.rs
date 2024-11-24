@@ -38,6 +38,7 @@ impl TryFrom<u8> for Bytecode {
             x if x == Bytecode::Div as u8 => Ok(Bytecode::Div),
             x if x == Bytecode::Shl as u8 => Ok(Bytecode::Shl),
             x if x == Bytecode::Shr as u8 => Ok(Bytecode::Shr),
+            x if x == Bytecode::Not as u8 => Ok(Bytecode::Not),
             _ => Err(()),
         }
     }
@@ -307,4 +308,10 @@ pub mod handlers {
         vm.rip += offset;
     }
 
+    pub fn not_handler(vm: &mut VirtualMachine) -> () {
+        let rip: usize = vm.rip.try_into().unwrap();
+        let reg_num: usize = vm.program[rip + 1].try_into().unwrap(); // two flag bits of NOT instruction can be any
+        vm.regs[reg_num] = !vm.regs[reg_num];
+        vm.rip += 2;
+    }
 }
