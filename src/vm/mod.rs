@@ -3,9 +3,7 @@ mod bytecode;
 use std::thread::JoinHandle;
 use std::{error::Error, fs, io::Read};
 use std::collections::HashMap;
-use std::process::exit;
 use bytecode::Bytecode;
-
 
 
 type BytecodeHandler = fn (&mut VirtualMachine) -> ();
@@ -18,13 +16,14 @@ enum Registers {
 }
 
 pub struct VirtualMachine {
-    r0: i64,
-    r1: i64,
-    r2: i64,
-    r3: i64,
-    rip: u64,
-    rflags: u8,
-    program: Vec<u8>,
+    pub r0: i64,
+    pub r1: i64,
+    pub r2: i64,
+    pub r3: i64,
+    pub rip: u64,
+    pub rflags: u8,
+    pub program: Vec<u8>,
+    executing: bool,
     handlers: HashMap<Bytecode, BytecodeHandler>
 }
 
@@ -32,8 +31,7 @@ fn nop_handler(vm: &mut VirtualMachine) -> () {
     vm.rip += 1;
 }
 fn hlt_handler(vm: &mut VirtualMachine) -> () {
-    let exit_code: i32 = vm.r0.try_into().unwrap_or(-1);
-    exit(exit_code);
+    vm.executing = false;
 }
 fn mov_handler(vm: &mut VirtualMachine) -> () {}
 fn add_handler(vm: &mut VirtualMachine) -> () {}
@@ -56,11 +54,12 @@ impl VirtualMachine {
         let mut file = fs::File::open(path)?;
         let mut buf: Vec<u8> = vec![];
         let result = file.read_to_end(&mut buf)?;
-        Ok(VirtualMachine {r0: 0, r1: 0, r2: 0, r3: 0, rip: 0, rflags: 0, program: buf, handlers: init_handlers()})
+        Ok(VirtualMachine {r0: 0, r1: 0, r2: 0, r3: 0, rip: 0, rflags: 0, program: buf, handlers: init_handlers(), executing: false})
     }
 
     pub fn execute(&mut self) {
-        loop {
+        self.executing = true;
+        while self.executing {
             let rip: usize = self.rip.try_into().unwrap();
             let opcode = self.program[rip];
             let bytecode = opcode.try_into().expect("Unknown bytecode");

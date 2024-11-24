@@ -27,7 +27,8 @@ pub enum Bytecode {
 impl TryFrom<u8> for Bytecode {
     type Error = ();
     fn try_from(opcode: u8) -> Result<Self, ()> {
-        match opcode {
+    let OPCODE_MASK = 0b111111;
+        match opcode & OPCODE_MASK {
             x if x == Bytecode::Nop as u8 => Ok(Bytecode::Nop),
             x if x == Bytecode::Hlt as u8 => Ok(Bytecode::Hlt),
             x if x == Bytecode::Mov as u8 => Ok(Bytecode::Mov),
