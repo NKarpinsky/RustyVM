@@ -32,4 +32,18 @@ mod tests {
         assert_eq!(vm.regs[1], 0xC0FFEE);
         assert_eq!(vm.regs[2], 0xDEADC0DE + 0xC0FFEE);
     }
+    #[test]
+    fn run_sub_program() {
+        let program_path = "tests_data/sub_program.rvm";
+        let vm = VirtualMachine::new(&program_path);
+        assert!(vm.is_ok());
+        let Ok(mut vm) = vm else {
+            assert!(false);
+            return;
+        };
+        vm.execute();
+        assert_eq!(vm.regs[0], 0xDEADC0DE - 0xDEADCE11);
+        assert_eq!(vm.regs[1], 0xC0FFEE);
+        assert_eq!(vm.regs[2], 0xDEADC0DE - 0xC0FFEE);
+    }
 }
