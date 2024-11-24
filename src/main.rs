@@ -10,7 +10,7 @@ fn main() {
         println!("Usage: rustyvm <path-to-program>");
         return;
     };
-    let mut vm = VirtualMachine::new(&program_path);
+    let vm = VirtualMachine::new(&program_path);
     match vm {
         Ok(mut vm) => vm.execute(),
         Err(err) => println!("Error occured while loading program into virtual machine: {}", err.to_string())

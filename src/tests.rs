@@ -1,5 +1,3 @@
-use super::vm::VirtualMachine;
-
 #[cfg(test)]
 mod tests {
     use crate::vm::VirtualMachine;
@@ -75,5 +73,17 @@ mod tests {
         assert_eq!(vm.regs[0], 0xDEADC0DE >> 0x13);
         assert_eq!(vm.regs[1], 8);
         assert_eq!(vm.regs[2], 0xDEADC0DE << 8);
+    }
+    #[test]
+    fn run_not_program() {
+        let program = "tests_data/not_program.rvm";
+        let vm = VirtualMachine::new(&program);
+        assert!(vm.is_ok());
+        let Ok(mut vm) = vm else {
+            assert!(false);
+            return;
+        };
+        vm.execute();
+        assert_eq!(vm.regs[0], !0xDEADC0DE);
     }
 }
