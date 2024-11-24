@@ -33,7 +33,7 @@ impl TryFrom<u8> for Bytecode {
             x if x == Bytecode::Mov as u8 => Ok(Bytecode::Mov),
             x if x == Bytecode::Add as u8 => Ok(Bytecode::Add),
             x if x == Bytecode::Sub as u8 => Ok(Bytecode::Sub),
-            _ => Err(Error{})
+            _ => Err(())
         }
     }
 }
