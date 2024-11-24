@@ -5,6 +5,7 @@ use std::thread::JoinHandle;
 use std::{error::Error, fs, io::Read};
 use std::collections::HashMap;
 use bytecode::Bytecode;
+use bytecode::handlers::*;
 
 
 type BytecodeHandler = fn (&mut VirtualMachine) -> ();
@@ -18,59 +19,7 @@ pub struct VirtualMachine {
     handlers: HashMap<Bytecode, BytecodeHandler>
 }
 
-fn nop_handler(vm: &mut VirtualMachine) -> () {
-    vm.rip += 1;
-}
-fn hlt_handler(vm: &mut VirtualMachine) -> () {
-    vm.executing = false;
-}
-fn mov_handler(vm: &mut VirtualMachine) -> () {}
-fn add_handler(vm: &mut VirtualMachine) -> () {
-    let rip: usize = vm.rip.try_into().unwrap();
-    let bytecode = vm.program[rip];
-    let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
-    let operand_2_is_register = bytecode & 0b10000000;
-    let mut offset = 0;
-    if operand_1_is_register != 0 && operand_2_is_register != 0 {
-        let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
-        let reg2_num: usize = vm.program[rip + 2].try_into().unwrap();
-        vm.regs[reg1_num] += vm.regs[reg2_num];
-        offset = 3;
-    }
-    if operand_1_is_register != 0 && operand_2_is_register == 0 {
-        let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
-        let constant = i64::from_le_bytes(vm.program[rip+2..rip+10].try_into().expect("Invalid constant size in bytecode"));
-        vm.regs[reg1_num] += constant;
-        offset = 10;
-    }
-    if offset == 0 {
-        panic!("Invalid bytecode!");
-    }
-    vm.rip += offset;
-}
-fn sub_handler(vm: &mut VirtualMachine) -> () {
-    let rip: usize = vm.rip.try_into().unwrap();
-    let bytecode = vm.program[rip];
-    let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
-    let operand_2_is_register = bytecode & 0b10000000;
-    let mut offset = 0;
-    if operand_1_is_register != 0 && operand_2_is_register != 0 {
-        let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
-        let reg2_num: usize = vm.program[rip + 2].try_into().unwrap();
-        vm.regs[reg1_num] -= vm.regs[reg2_num];
-        offset = 3;
-    }
-    if operand_1_is_register != 0 && operand_2_is_register == 0 {
-        let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
-        let constant = i64::from_le_bytes(vm.program[rip+2..rip+10].try_into().expect("Invalid constant size in bytecode"));
-        vm.regs[reg1_num] -= constant;
-        offset = 10;
-    }
-    if offset == 0 {
-        panic!("Invalid bytecode!");
-    }
-    vm.rip += offset;
-}
+
 
 fn init_handlers() -> HashMap<Bytecode, BytecodeHandler> {
     let mut handlers = HashMap::new();
@@ -79,6 +28,8 @@ fn init_handlers() -> HashMap<Bytecode, BytecodeHandler> {
     handlers.insert(Bytecode::Mov, mov_handler as BytecodeHandler);
     handlers.insert(Bytecode::Add, add_handler as BytecodeHandler);
     handlers.insert(Bytecode::Sub, sub_handler as BytecodeHandler);
+    handlers.insert(Bytecode::Mul, mul_handler as BytecodeHandler);
+    handlers.insert(Bytecode::Div, div_handler as BytecodeHandler);
 
     return handlers;
 }

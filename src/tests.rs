@@ -46,4 +46,19 @@ mod tests {
         assert_eq!(vm.regs[1], 0xC0FFEE);
         assert_eq!(vm.regs[2], 0xDEADC0DE - 0xC0FFEE);
     }
+
+    #[test]
+    fn run_mul_div_program() {
+        let program = "tests_data/mul_div_program.rvm";
+        let vm = VirtualMachine::new(&program);
+        assert!(vm.is_ok());
+        let Ok(mut vm) = vm else {
+            assert!(false);
+            return;
+        };
+        vm.execute();
+        assert_eq!(vm.regs[0], 0xDEADC0DE / 0xDEADCE11);
+        assert_eq!(vm.regs[1], 0xC0FFEE);
+        assert_eq!(vm.regs[2], 0xDEADC0DE * 0xC0FFEE);
+    }
 }
