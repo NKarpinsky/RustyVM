@@ -1,7 +1,5 @@
 mod bytecode;
 
-use core::panic;
-use std::thread::JoinHandle;
 use std::{error::Error, fs, io::Read};
 use std::collections::HashMap;
 use bytecode::Bytecode;

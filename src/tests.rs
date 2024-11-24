@@ -1,5 +1,3 @@
-use super::vm::VirtualMachine;
-
 #[cfg(test)]
 mod tests {
     use crate::vm::VirtualMachine;
