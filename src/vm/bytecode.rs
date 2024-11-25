@@ -15,6 +15,8 @@ pub enum Bytecode {
     Not,
     And,
     Or,
+    Push,
+    Pop,
     Cmp,
     Jmp,
     Je,
