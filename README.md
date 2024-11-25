@@ -8,7 +8,7 @@ Simple virtual machine project for learning Rust!
 ## Tasks
 - [x] Bytecode execution
 - [x] Arithmetic opcodes (add, sub, not, xor, shl, shr, etc.)
+- [ ] Memory mapping (stack, heap, etc.)
 - [ ] Memory opcodes (mov)
-- [ ] Stack and Heap
 - [ ] Interrupts/Syscalls (int)
 - [ ] Simple assembler program
