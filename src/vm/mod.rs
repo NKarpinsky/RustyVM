@@ -1,9 +1,12 @@
 mod bytecode;
+mod memory_mapping;
 
 use std::{error::Error, fs, io::Read};
 use std::collections::HashMap;
+
 use bytecode::Bytecode;
 use bytecode::handlers::*;
+use memory_mapping::MemoryManager;
 
 
 type BytecodeHandler = fn (&mut VirtualMachine) -> ();
@@ -15,6 +18,7 @@ pub struct VirtualMachine {
     pub program: Vec<u8>,
     executing: bool,
     handlers: HashMap<Bytecode, BytecodeHandler>
+    mem_mgr: MemoryManager
 }
 
 
@@ -44,7 +48,14 @@ impl VirtualMachine {
         let mut file = fs::File::open(path)?;
         let mut buf: Vec<u8> = vec![];
         let result = file.read_to_end(&mut buf)?;
-        Ok(VirtualMachine {regs: [0; 256], rip: 0, rflags: 0, program: buf, handlers: init_handlers(), executing: false})
+        Ok(VirtualMachine {
+            regs: [0; 256], 
+            rip: 0, 
+            rflags: 0, 
+            program: buf, 
+            handlers: init_handlers(), 
+            executing: false,
+            mem_mgr: Default::default()})
     }
 
     pub fn execute(&mut self) {
