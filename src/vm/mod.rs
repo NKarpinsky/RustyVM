@@ -17,7 +17,7 @@ pub struct VirtualMachine {
     pub rflags: u8,
     pub program: Vec<u8>,
     executing: bool,
-    handlers: HashMap<Bytecode, BytecodeHandler>
+    handlers: HashMap<Bytecode, BytecodeHandler>,
     mem_mgr: MemoryManager
 }
 
