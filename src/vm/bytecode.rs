@@ -41,6 +41,8 @@ impl TryFrom<u8> for Bytecode {
             x if x == Bytecode::Shl as u8 => Ok(Bytecode::Shl),
             x if x == Bytecode::Shr as u8 => Ok(Bytecode::Shr),
             x if x == Bytecode::Not as u8 => Ok(Bytecode::Not),
+            x if x == Bytecode::And as u8 => Ok(Bytecode::And),
+            x if x == Bytecode::Or as u8 => Ok(Bytecode::Or),
             _ => Err(()),
         }
     }
