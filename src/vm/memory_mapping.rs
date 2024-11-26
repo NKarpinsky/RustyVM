@@ -13,11 +13,15 @@ pub struct MemoryManager {
 
 impl MemoryManager {
 
-    fn alloc(&mut self, base: u64, size: u64) -> Result<(), String> {
+    pub fn alloc(&mut self, base: u64, size: u64) -> Result<(), String> {
         Ok(())
     }
 
-    fn dealloc(&mut self, base: u64) -> Result<(), String> {
-        Ok(())
+    pub fn dealloc(&mut self, base: u64) -> Result<(), String> {
+        let Some(index) = self.sections.iter().position(|x| x.base == base) else {
+            return Err("Memory section does not exists!".to_string());
+        };
+            self.sections.remove(index);
+            Ok(())
     }
 }
