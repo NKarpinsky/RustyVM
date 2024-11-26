@@ -1,16 +1,16 @@
-mod bytecode;
+pub mod bytecode;
 
 use std::{error::Error, fs, io::Read};
 use std::collections::HashMap;
 use bytecode::Bytecode;
 use bytecode::handlers::*;
+use bytecode::SpecicalRegisters::rip;
 
 
 type BytecodeHandler = fn (&mut VirtualMachine) -> ();
 
 pub struct VirtualMachine {
     pub regs: [i64; 256],
-    pub rip: u64,
     pub rflags: u8,
     pub program: Vec<u8>,
     executing: bool,
@@ -44,14 +44,14 @@ impl VirtualMachine {
         let mut file = fs::File::open(path)?;
         let mut buf: Vec<u8> = vec![];
         let result = file.read_to_end(&mut buf)?;
-        Ok(VirtualMachine {regs: [0; 256], rip: 0, rflags: 0, program: buf, handlers: init_handlers(), executing: false})
+        Ok(VirtualMachine {regs: [0; 256], rflags: 0, program: buf, handlers: init_handlers(), executing: false})
     }
 
     pub fn execute(&mut self) {
         self.executing = true;
         while self.executing {
-            let rip: usize = self.rip.try_into().unwrap();
-            let opcode = self.program[rip];
+            let _rip: usize = self.regs[rip as usize].try_into().unwrap();
+            let opcode = self.program[_rip];
             let bytecode = opcode.try_into().expect("Unknown bytecode");
             self.handlers[&bytecode](self);
         }
