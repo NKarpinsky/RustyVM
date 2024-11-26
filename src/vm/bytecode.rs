@@ -317,3 +317,17 @@ pub mod handlers {
         vm.rip += 2;
     }
 }
+
+// All registers has names r0-r255, but some of them has spectial roles in opcodes.
+// This register nums presented at this enum. They can be used as any other registers
+enum SpecicalRegisters {
+    rax,
+    rdi,
+    rsi,
+    rbp,
+    rsp,
+    rip,
+    cs,
+    ss,
+    ds,
+}
