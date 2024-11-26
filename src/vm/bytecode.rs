@@ -41,16 +41,33 @@ impl TryFrom<u8> for Bytecode {
             x if x == Bytecode::Shl as u8 => Ok(Bytecode::Shl),
             x if x == Bytecode::Shr as u8 => Ok(Bytecode::Shr),
             x if x == Bytecode::Not as u8 => Ok(Bytecode::Not),
+            x if x == Bytecode::And as u8 => Ok(Bytecode::And),
+            x if x == Bytecode::Or as u8 => Ok(Bytecode::Or),
             _ => Err(()),
         }
     }
 }
 
+// All registers has names r0-r255, but some of them has spectial roles in opcodes.
+// This register nums presented at this enum. They can be used as any other registers
+pub enum SpecicalRegisters {
+    rax,
+    rdi,
+    rsi,
+    rbp,
+    rsp,
+    rip,
+    cs,
+    ss,
+    ds,
+}
+
 pub mod handlers {
     use super::super::VirtualMachine;
+    use super::SpecicalRegisters;
     
     pub fn nop_handler(vm: &mut VirtualMachine) -> () {
-        vm.rip += 1;
+        vm.regs[SpecicalRegisters::rip as usize] += 1;
     }
     
     pub fn hlt_handler(vm: &mut VirtualMachine) -> () {
@@ -59,7 +76,7 @@ pub mod handlers {
     pub fn mov_handler(vm: &mut VirtualMachine) -> () {}
     
     pub fn add_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.program[rip];
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
@@ -83,11 +100,11 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
     
     pub fn sub_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.program[rip];
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
@@ -111,11 +128,11 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn mul_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.program[rip];
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
@@ -139,11 +156,11 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn div_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.program[rip];
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
@@ -167,11 +184,11 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn shl_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.program[rip];
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
@@ -195,11 +212,11 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn shr_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.program[rip];
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
@@ -223,11 +240,11 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn xor_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.program[rip];
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
@@ -251,11 +268,11 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn and_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.program[rip];
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
@@ -279,11 +296,11 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn or_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.program[rip];
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
@@ -307,13 +324,14 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn not_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let reg_num: usize = vm.program[rip + 1].try_into().unwrap(); // two flag bits of NOT instruction can be any
         vm.regs[reg_num] = !vm.regs[reg_num];
-        vm.rip += 2;
+        vm.regs[SpecicalRegisters::rip as usize] += 2;
     }
 }
+

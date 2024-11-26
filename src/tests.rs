@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::vm::VirtualMachine;
-
+    use crate::vm::bytecode::SpecicalRegisters::rip;
     
     #[test]
     fn run_nop_program() {
@@ -13,7 +13,7 @@ mod tests {
             return;
         };
         vm.execute();
-        assert_eq!(vm.rip, 4);
+        assert_eq!(vm.regs[rip as usize], 4);
     }
 
     #[test]
