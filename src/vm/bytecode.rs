@@ -15,6 +15,8 @@ pub enum Bytecode {
     Not,
     And,
     Or,
+    Push,
+    Pop,
     Cmp,
     Jmp,
     Je,
@@ -39,39 +41,56 @@ impl TryFrom<u8> for Bytecode {
             x if x == Bytecode::Shl as u8 => Ok(Bytecode::Shl),
             x if x == Bytecode::Shr as u8 => Ok(Bytecode::Shr),
             x if x == Bytecode::Not as u8 => Ok(Bytecode::Not),
+            x if x == Bytecode::And as u8 => Ok(Bytecode::And),
+            x if x == Bytecode::Or as u8 => Ok(Bytecode::Or),
             _ => Err(()),
         }
     }
 }
 
+// All registers has names r0-r255, but some of them has spectial roles in opcodes.
+// This register nums presented at this enum. They can be used as any other registers
+pub enum SpecicalRegisters {
+    rax,
+    rbx,
+    rcx,
+    rdx,
+    rdi,
+    rsi,
+    rbp,
+    rsp,
+    rip,
+}
+
 pub mod handlers {
     use super::super::VirtualMachine;
-    
+    use super::SpecicalRegisters;
+
     pub fn nop_handler(vm: &mut VirtualMachine) -> () {
-        vm.rip += 1;
+        vm.regs[SpecicalRegisters::rip as usize] += 1;
     }
-    
+
     pub fn hlt_handler(vm: &mut VirtualMachine) -> () {
         vm.executing = false;
     }
     pub fn mov_handler(vm: &mut VirtualMachine) -> () {}
-    
+
     pub fn add_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
-        let bytecode = vm.program[rip];
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let bytecode = vm.mem.load_u8(rip).unwrap();
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
         let mut offset = 0;
         if operand_1_is_register != 0 && operand_2_is_register != 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
-            let reg2_num: usize = vm.program[rip + 2].try_into().unwrap();
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
+            let reg2_num: usize = vm.mem.load_u8(rip + 2).unwrap().try_into().unwrap();
             vm.regs[reg1_num] += vm.regs[reg2_num];
             offset = 3;
         }
         if operand_1_is_register != 0 && operand_2_is_register == 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
             let constant = i64::from_le_bytes(
-                vm.program[rip + 2..rip + 10]
+                vm.mem.load(rip + 2, 8).unwrap()
                     .try_into()
                     .expect("Invalid constant size in bytecode"),
             );
@@ -81,25 +100,25 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
-    
+
     pub fn sub_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
-        let bytecode = vm.program[rip];
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let bytecode = vm.mem.load_u8(rip).unwrap();
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
         let mut offset = 0;
         if operand_1_is_register != 0 && operand_2_is_register != 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
-            let reg2_num: usize = vm.program[rip + 2].try_into().unwrap();
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
+            let reg2_num: usize = vm.mem.load_u8(rip + 2).unwrap().try_into().unwrap();
             vm.regs[reg1_num] -= vm.regs[reg2_num];
             offset = 3;
         }
         if operand_1_is_register != 0 && operand_2_is_register == 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
             let constant = i64::from_le_bytes(
-                vm.program[rip + 2..rip + 10]
+                vm.mem.load(rip + 2, 8).unwrap()
                     .try_into()
                     .expect("Invalid constant size in bytecode"),
             );
@@ -109,25 +128,25 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn mul_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
-        let bytecode = vm.program[rip];
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let bytecode = vm.mem.load_u8(rip).unwrap();
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
         let mut offset = 0;
         if operand_1_is_register != 0 && operand_2_is_register != 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
-            let reg2_num: usize = vm.program[rip + 2].try_into().unwrap();
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
+            let reg2_num: usize = vm.mem.load_u8(rip + 2).unwrap().try_into().unwrap();
             vm.regs[reg1_num] *= vm.regs[reg2_num];
             offset = 3;
         }
         if operand_1_is_register != 0 && operand_2_is_register == 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
             let constant = i64::from_le_bytes(
-                vm.program[rip + 2..rip + 10]
+                vm.mem.load(rip + 2, 8).unwrap()
                     .try_into()
                     .expect("Invalid constant size in bytecode"),
             );
@@ -137,25 +156,25 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn div_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
-        let bytecode = vm.program[rip];
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let bytecode = vm.mem.load_u8(rip).unwrap();
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
         let mut offset = 0;
         if operand_1_is_register != 0 && operand_2_is_register != 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
-            let reg2_num: usize = vm.program[rip + 2].try_into().unwrap();
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
+            let reg2_num: usize = vm.mem.load_u8(rip + 2).unwrap().try_into().unwrap();
             vm.regs[reg1_num] /= vm.regs[reg2_num];
             offset = 3;
         }
         if operand_1_is_register != 0 && operand_2_is_register == 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
             let constant = i64::from_le_bytes(
-                vm.program[rip + 2..rip + 10]
+                vm.mem.load(rip + 2, 8).unwrap()
                     .try_into()
                     .expect("Invalid constant size in bytecode"),
             );
@@ -165,25 +184,25 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn shl_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
-        let bytecode = vm.program[rip];
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let bytecode = vm.mem.load_u8(rip).unwrap();
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
         let mut offset = 0;
         if operand_1_is_register != 0 && operand_2_is_register != 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
-            let reg2_num: usize = vm.program[rip + 2].try_into().unwrap();
-            vm.regs[reg1_num] <<= vm.regs[reg2_num] & 0b111111;
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
+            let reg2_num: usize = vm.mem.load_u8(rip + 2).unwrap().try_into().unwrap();
+            vm.regs[reg1_num] <<= vm.regs[reg2_num];
             offset = 3;
         }
         if operand_1_is_register != 0 && operand_2_is_register == 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
             let constant = i64::from_le_bytes(
-                vm.program[rip + 2..rip + 10]
+                vm.mem.load(rip + 2, 8).unwrap()
                     .try_into()
                     .expect("Invalid constant size in bytecode"),
             );
@@ -193,25 +212,25 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn shr_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
-        let bytecode = vm.program[rip];
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let bytecode = vm.mem.load_u8(rip).unwrap();
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
         let mut offset = 0;
         if operand_1_is_register != 0 && operand_2_is_register != 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
-            let reg2_num: usize = vm.program[rip + 2].try_into().unwrap();
-            vm.regs[reg1_num] >>= vm.regs[reg2_num] & 0b111111;
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
+            let reg2_num: usize = vm.mem.load_u8(rip + 2).unwrap().try_into().unwrap();
+            vm.regs[reg1_num] >>= vm.regs[reg2_num];
             offset = 3;
         }
         if operand_1_is_register != 0 && operand_2_is_register == 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
             let constant = i64::from_le_bytes(
-                vm.program[rip + 2..rip + 10]
+                vm.mem.load(rip + 2, 8).unwrap()
                     .try_into()
                     .expect("Invalid constant size in bytecode"),
             );
@@ -221,25 +240,25 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn xor_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
-        let bytecode = vm.program[rip];
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let bytecode = vm.mem.load_u8(rip).unwrap();
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
         let mut offset = 0;
         if operand_1_is_register != 0 && operand_2_is_register != 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
-            let reg2_num: usize = vm.program[rip + 2].try_into().unwrap();
-            vm.regs[reg1_num] ^= vm.regs[reg2_num] & 0b111111;
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
+            let reg2_num: usize = vm.mem.load_u8(rip + 2).unwrap().try_into().unwrap();
+            vm.regs[reg1_num] ^= vm.regs[reg2_num];
             offset = 3;
         }
         if operand_1_is_register != 0 && operand_2_is_register == 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
             let constant = i64::from_le_bytes(
-                vm.program[rip + 2..rip + 10]
+                vm.mem.load(rip + 2, 8).unwrap()
                     .try_into()
                     .expect("Invalid constant size in bytecode"),
             );
@@ -249,25 +268,25 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn and_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
-        let bytecode = vm.program[rip];
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let bytecode = vm.mem.load_u8(rip).unwrap();
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
         let mut offset = 0;
         if operand_1_is_register != 0 && operand_2_is_register != 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
-            let reg2_num: usize = vm.program[rip + 2].try_into().unwrap();
-            vm.regs[reg1_num] &= vm.regs[reg2_num] & 0b111111;
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
+            let reg2_num: usize = vm.mem.load_u8(rip + 2).unwrap().try_into().unwrap();
+            vm.regs[reg1_num] &= vm.regs[reg2_num];
             offset = 3;
         }
         if operand_1_is_register != 0 && operand_2_is_register == 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
             let constant = i64::from_le_bytes(
-                vm.program[rip + 2..rip + 10]
+                vm.mem.load(rip + 2, 8).unwrap()
                     .try_into()
                     .expect("Invalid constant size in bytecode"),
             );
@@ -277,25 +296,25 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn or_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
-        let bytecode = vm.program[rip];
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let bytecode = vm.mem.load_u8(rip).unwrap();
         let operand_1_is_register = bytecode & 0b1000000; // now always must be a register
         let operand_2_is_register = bytecode & 0b10000000;
         let mut offset = 0;
         if operand_1_is_register != 0 && operand_2_is_register != 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
-            let reg2_num: usize = vm.program[rip + 2].try_into().unwrap();
-            vm.regs[reg1_num] |= vm.regs[reg2_num] & 0b111111;
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
+            let reg2_num: usize = vm.mem.load_u8(rip + 2).unwrap().try_into().unwrap();
+            vm.regs[reg1_num] |= vm.regs[reg2_num];
             offset = 3;
         }
         if operand_1_is_register != 0 && operand_2_is_register == 0 {
-            let reg1_num: usize = vm.program[rip + 1].try_into().unwrap();
+            let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
             let constant = i64::from_le_bytes(
-                vm.program[rip + 2..rip + 10]
+                vm.mem.load(rip + 2, 8).unwrap()
                     .try_into()
                     .expect("Invalid constant size in bytecode"),
             );
@@ -305,13 +324,13 @@ pub mod handlers {
         if offset == 0 {
             panic!("Invalid bytecode!");
         }
-        vm.rip += offset;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn not_handler(vm: &mut VirtualMachine) -> () {
-        let rip: usize = vm.rip.try_into().unwrap();
-        let reg_num: usize = vm.program[rip + 1].try_into().unwrap(); // two flag bits of NOT instruction can be any
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let reg_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap(); // two flag bits of NOT instruction can be any
         vm.regs[reg_num] = !vm.regs[reg_num];
-        vm.rip += 2;
+        vm.regs[SpecicalRegisters::rip as usize] += 2;
     }
 }
