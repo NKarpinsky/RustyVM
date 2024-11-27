@@ -1,13 +1,12 @@
-
 pub mod bytecode;
-mod memory_mapping;
+pub mod memory_manager;
 
 use std::{error::Error, fs, io::Read};
 use std::collections::HashMap;
 
 use bytecode::Bytecode;
 use bytecode::handlers::*;
-use memory_mapping::MemoryManager;
+use memory_manager::MemoryManager;
 use bytecode::SpecicalRegisters::{rip, cs};
 
 
@@ -75,7 +74,7 @@ impl VirtualMachine {
         self.executing = true;
         while self.executing {
             let _rip: usize = self.regs[rip as usize].try_into().unwrap();
-            let opcode = self.program[_rip];
+            let Ok(opcode) = self.mem_mgr.load_u8(_rip) else { return; };
             let bytecode = opcode.try_into().expect("Unknown bytecode");
             self.handlers[&bytecode](self);
         }

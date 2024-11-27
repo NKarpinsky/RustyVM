@@ -15,7 +15,8 @@ impl MemoryManager {
     fn load(&mut self, address: usize, size: usize) -> Result<&[u8], ()> {
         for section in &self.sections {
             if section.base <= address && address <= section.base + section.size {
-                let data = &section.memory[address..address+size];
+                let offset = address - section.base;
+                let data = &section.memory[offset..offset+size];
                 return Ok(data);
             }
         }
@@ -46,10 +47,11 @@ impl MemoryManager {
     }
 
     fn store(&mut self, address: usize, value: &[u8]) -> Result<usize, ()> {
-        for section in &self.sections {
+        for section in &mut self.sections {
             if section.base <= address && address <= section.base + section.size {
                 let length = value.len();
-                    section.memory[address..address+length].clone_into(&mut value.to_vec());
+                let offset = address - section.base;    
+                section.memory[offset..offset+length].clone_from_slice(value);
                 return Ok(value.len());
             }
         }
@@ -73,7 +75,7 @@ impl MemoryManager {
         self.store(address, &data)
     }
     
-    pub fn store_u64(&mut self, address: usize, value: u32) -> Result<usize, ()> {
+    pub fn store_u64(&mut self, address: usize, value: u64) -> Result<usize, ()> {
         let data = value.to_le_bytes();
         self.store(address, &data)
     }

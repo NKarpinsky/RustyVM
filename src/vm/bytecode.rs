@@ -65,16 +65,16 @@ pub enum SpecicalRegisters {
 pub mod handlers {
     use super::super::VirtualMachine;
     use super::SpecicalRegisters;
-    
+
     pub fn nop_handler(vm: &mut VirtualMachine) -> () {
         vm.regs[SpecicalRegisters::rip as usize] += 1;
     }
-    
+
     pub fn hlt_handler(vm: &mut VirtualMachine) -> () {
         vm.executing = false;
     }
     pub fn mov_handler(vm: &mut VirtualMachine) -> () {}
-    
+
     pub fn add_handler(vm: &mut VirtualMachine) -> () {
         let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.program[rip];
@@ -102,7 +102,7 @@ pub mod handlers {
         }
         vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
-    
+
     pub fn sub_handler(vm: &mut VirtualMachine) -> () {
         let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.program[rip];
@@ -334,4 +334,3 @@ pub mod handlers {
         vm.regs[SpecicalRegisters::rip as usize] += 2;
     }
 }
-
