@@ -43,6 +43,8 @@ impl TryFrom<u8> for Bytecode {
             x if x == Bytecode::Not as u8 => Ok(Bytecode::Not),
             x if x == Bytecode::And as u8 => Ok(Bytecode::And),
             x if x == Bytecode::Or as u8 => Ok(Bytecode::Or),
+            x if x == Bytecode::Push as u8 => Ok(Bytecode::Push),
+            x if x == Bytecode::Pop as u8 => Ok(Bytecode::Pop),
             _ => Err(()),
         }
     }
@@ -74,6 +76,31 @@ pub mod handlers {
         vm.executing = false;
     }
     pub fn mov_handler(vm: &mut VirtualMachine) -> () {}
+
+    pub fn push_handler(vm: &mut VirtualMachine) -> () {
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let reg_num = vm.mem.load_u8(rip + 1).unwrap();
+        let rsp = &mut vm.regs[SpecicalRegisters::rsp as usize];
+        *rsp += 8;
+        let address: usize = (*rsp).try_into().unwrap();
+        let result = vm.mem.store(address, &vm.regs[reg_num as usize].to_le_bytes());
+        if result.is_err() {
+            panic!("Stack overflow!");
+        }
+    }
+
+    pub fn pop_handler(vm: &mut VirtualMachine) -> () {
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let reg_num = vm.mem.load_u8(rip + 1).unwrap();
+        let rsp = &mut vm.regs[SpecicalRegisters::rsp as usize];
+        let address: usize = (*rsp).try_into().unwrap();
+        let Ok(result) = vm.mem.load(address, 8) else {
+            panic!("Can not access stack memory!");
+        };
+        *rsp -= 8;
+        let result: i64 = i64::from_le_bytes(result.try_into().unwrap());
+        vm.regs[reg_num as usize] = result;
+    }
 
     pub fn add_handler(vm: &mut VirtualMachine) -> () {
         let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
