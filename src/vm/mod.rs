@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use bytecode::Bytecode;
 use bytecode::handlers::*;
 use memory_mapping::MemoryManager;
-use bytecode::SpecicalRegisters::rip;
+use bytecode::SpecicalRegisters::{rip, cs};
 
 
 type BytecodeHandler = fn (&mut VirtualMachine) -> ();
@@ -16,7 +16,6 @@ type BytecodeHandler = fn (&mut VirtualMachine) -> ();
 pub struct VirtualMachine {
     pub regs: [i64; 256],
     pub rflags: u8,
-    pub program: Vec<u8>,
     executing: bool,
     handlers: HashMap<Bytecode, BytecodeHandler>,
     mem_mgr: MemoryManager
@@ -45,6 +44,21 @@ fn init_handlers() -> HashMap<Bytecode, BytecodeHandler> {
 
 impl VirtualMachine {
 
+    pub fn from_shellcode(bytes: &[u8]) -> Result<VirtualMachine, Box<dyn Error>> {
+        let mut vm = VirtualMachine {
+            regs: [0; 256],
+            rflags: 0,
+            handlers: init_handlers(),
+            executing: false,
+            mem_mgr: Default::default(),
+        };
+        let base_address = 0x400000;
+        vm.mem_mgr.alloc(base_address, bytes.len())?;
+        vm.regs[cs as usize] = base_address.try_into()?;
+        vm.regs[rip as usize] = base_address.try_into()?;
+        return Ok(vm);
+    }
+
     pub fn new(path: &str) -> Result<VirtualMachine, Box<dyn Error>> {
         let mut file = fs::File::open(path)?;
         let mut buf: Vec<u8> = vec![];
@@ -52,7 +66,6 @@ impl VirtualMachine {
         Ok(VirtualMachine {
             regs: [0; 256], 
             rflags: 0, 
-            program: buf, 
             handlers: init_handlers(), 
             executing: false,
             mem_mgr: Default::default()})
