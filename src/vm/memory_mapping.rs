@@ -1,5 +1,4 @@
 
-
 struct Section {
     base: usize,
     size: usize,
@@ -12,8 +11,6 @@ pub struct MemoryManager {
 }
 
 impl MemoryManager {
-
-
 
     fn load(&mut self, address: usize, size: usize) -> Result<&[u8], ()> {
         for section in &self.sections {
@@ -46,6 +43,39 @@ impl MemoryManager {
         let data = self.load(address, 8)?;
         let result = u64::from_le_bytes(data.try_into().unwrap());
         return Ok(result);
+    }
+
+    fn store(&mut self, address: usize, value: &[u8]) -> Result<usize, ()> {
+        for section in &self.sections {
+            if section.base <= address && address <= section.base + section.size {
+                let length = value.len();
+                    section.memory[address..address+length].clone_into(&mut value.to_vec());
+                return Ok(value.len());
+            }
+        }
+        return Err(());
+    }
+
+    
+
+    pub fn store_u8(&mut self, address: usize, value: u8) -> Result<usize, ()> {
+        let data = value.to_le_bytes();
+        self.store(address, &data)
+    }
+
+    pub fn store_u16(&mut self, address: usize, value: u16) -> Result<usize, ()> {
+        let data = value.to_le_bytes();
+        self.store(address, &data)
+    }
+
+    pub fn store_u32(&mut self, address: usize, value: u32) -> Result<usize, ()> {
+        let data = value.to_le_bytes();
+        self.store(address, &data)
+    }
+    
+    pub fn store_u64(&mut self, address: usize, value: u32) -> Result<usize, ()> {
+        let data = value.to_le_bytes();
+        self.store(address, &data)
     }
 
     pub fn alloc(&mut self, base: usize, size: usize) -> Result<(), &str> {
