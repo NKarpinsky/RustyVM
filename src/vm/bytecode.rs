@@ -52,14 +52,14 @@ impl TryFrom<u8> for Bytecode {
 // This register nums presented at this enum. They can be used as any other registers
 pub enum SpecicalRegisters {
     rax,
+    rbx,
+    rcx,
+    rdx,
     rdi,
     rsi,
     rbp,
     rsp,
     rip,
-    cs,
-    ss,
-    ds,
 }
 
 pub mod handlers {

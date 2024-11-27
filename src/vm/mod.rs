@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use bytecode::Bytecode;
 use bytecode::handlers::*;
 use memory_manager::MemoryManager;
-use bytecode::SpecicalRegisters::{rip, cs};
+use bytecode::SpecicalRegisters::{rip, rsp};
 
 
 type BytecodeHandler = fn (&mut VirtualMachine) -> ();
@@ -52,9 +52,13 @@ impl VirtualMachine {
             mem: Default::default(),
         };
         let base_address = 0x400000;
-        vm.mem.alloc(base_address, shellcode.len())?;
+        let stack_address = 0x500000;
+        vm.mem.alloc(base_address, shellcode.len())?;   // allocating memory for shellcode
         vm.mem.store(base_address, shellcode);
         vm.regs[rip as usize] = base_address.try_into()?;
+
+        vm.mem.alloc(stack_address, 0x1000)?;   // allocating memory for stack
+        vm.regs[rsp as usize] = stack_address.try_into()?;
         return Ok(vm);
     }
 
