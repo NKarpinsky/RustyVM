@@ -59,24 +59,30 @@ mod memory_tests {
 mod vm_tests {
     use crate::vm::VirtualMachine;
     use crate::vm::bytecode::SpecicalRegisters::rip;
-    
+    use std::fs::File;
+    use std::io::Read;
+
     #[test]
     fn run_nop_program() {
         let program_path = "tests_data/nop_program.rvm";
-        let vm = VirtualMachine::new(&program_path);
+        let mut shellcode = vec![];
+        File::open(program_path).unwrap().read_to_end(&mut shellcode);
+        let vm = VirtualMachine::from_shellcode(&shellcode);
         assert!(vm.is_ok());
         let Ok(mut vm) = vm else {
             assert!(false);
             return;
         };
         vm.execute();
-        assert_eq!(vm.regs[rip as usize], 4);
+        assert_eq!(vm.regs[rip as usize] - 0x400000, 4);
     }
 
     #[test]
     fn run_add_program() {
         let program_path = "tests_data/add_program.rvm";
-        let vm = VirtualMachine::new(&program_path);
+        let mut shellcode = vec![];
+        File::open(program_path).unwrap().read_to_end(&mut shellcode);
+        let vm = VirtualMachine::from_shellcode(&shellcode);
         assert!(vm.is_ok());
         let Ok(mut vm) = vm else {
             assert!(false);
@@ -90,7 +96,9 @@ mod vm_tests {
     #[test]
     fn run_sub_program() {
         let program_path = "tests_data/sub_program.rvm";
-        let vm = VirtualMachine::new(&program_path);
+        let mut shellcode = vec![];
+        File::open(program_path).unwrap().read_to_end(&mut shellcode);
+        let vm = VirtualMachine::from_shellcode(&shellcode);
         assert!(vm.is_ok());
         let Ok(mut vm) = vm else {
             assert!(false);
@@ -104,8 +112,10 @@ mod vm_tests {
 
     #[test]
     fn run_mul_div_program() {
-        let program = "tests_data/mul_div_program.rvm";
-        let vm = VirtualMachine::new(&program);
+        let program_path = "tests_data/mul_div_program.rvm";
+        let mut shellcode = vec![];
+        File::open(program_path).unwrap().read_to_end(&mut shellcode);
+        let vm = VirtualMachine::from_shellcode(&shellcode);
         assert!(vm.is_ok());
         let Ok(mut vm) = vm else {
             assert!(false);
@@ -119,8 +129,10 @@ mod vm_tests {
 
     #[test]
     fn run_shl_shr_program() {
-        let program = "tests_data/shl_shr_program.rvm";
-        let vm = VirtualMachine::new(&program);
+        let program_path = "tests_data/shl_shr_program.rvm";
+        let mut shellcode = vec![];
+        File::open(program_path).unwrap().read_to_end(&mut shellcode);
+        let vm = VirtualMachine::from_shellcode(&shellcode);
         assert!(vm.is_ok());
         let Ok(mut vm) = vm else {
             assert!(false);
@@ -133,8 +145,10 @@ mod vm_tests {
     }
     #[test]
     fn run_not_program() {
-        let program = "tests_data/not_program.rvm";
-        let vm = VirtualMachine::new(&program);
+        let program_path = "tests_data/not_program.rvm";
+        let mut shellcode = vec![];
+        File::open(program_path).unwrap().read_to_end(&mut shellcode);
+        let vm = VirtualMachine::from_shellcode(&shellcode);
         assert!(vm.is_ok());
         let Ok(mut vm) = vm else {
             assert!(false);

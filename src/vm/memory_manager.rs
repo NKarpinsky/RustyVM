@@ -12,7 +12,7 @@ pub struct MemoryManager {
 
 impl MemoryManager {
 
-    fn load(&mut self, address: usize, size: usize) -> Result<&[u8], ()> {
+    pub fn load(&mut self, address: usize, size: usize) -> Result<&[u8], ()> {
         for section in &self.sections {
             if section.base <= address && address <= section.base + section.size {
                 let offset = address - section.base;
@@ -46,7 +46,7 @@ impl MemoryManager {
         return Ok(result);
     }
 
-    fn store(&mut self, address: usize, value: &[u8]) -> Result<usize, ()> {
+    pub fn store(&mut self, address: usize, value: &[u8]) -> Result<usize, ()> {
         for section in &mut self.sections {
             if section.base <= address && address <= section.base + section.size {
                 let length = value.len();

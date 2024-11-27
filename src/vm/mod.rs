@@ -17,7 +17,7 @@ pub struct VirtualMachine {
     pub rflags: u8,
     executing: bool,
     handlers: HashMap<Bytecode, BytecodeHandler>,
-    mem_mgr: MemoryManager
+    mem: MemoryManager
 }
 
 
@@ -43,17 +43,17 @@ fn init_handlers() -> HashMap<Bytecode, BytecodeHandler> {
 
 impl VirtualMachine {
 
-    pub fn from_shellcode(bytes: &[u8]) -> Result<VirtualMachine, Box<dyn Error>> {
+    pub fn from_shellcode(shellcode: &[u8]) -> Result<VirtualMachine, Box<dyn Error>> {
         let mut vm = VirtualMachine {
             regs: [0; 256],
             rflags: 0,
             handlers: init_handlers(),
             executing: false,
-            mem_mgr: Default::default(),
+            mem: Default::default(),
         };
         let base_address = 0x400000;
-        vm.mem_mgr.alloc(base_address, bytes.len())?;
-        vm.regs[cs as usize] = base_address.try_into()?;
+        vm.mem.alloc(base_address, shellcode.len())?;
+        vm.mem.store(base_address, shellcode);
         vm.regs[rip as usize] = base_address.try_into()?;
         return Ok(vm);
     }
@@ -67,14 +67,14 @@ impl VirtualMachine {
             rflags: 0, 
             handlers: init_handlers(), 
             executing: false,
-            mem_mgr: Default::default()})
+            mem: Default::default()})
     }
 
     pub fn execute(&mut self) {
         self.executing = true;
         while self.executing {
             let _rip: usize = self.regs[rip as usize].try_into().unwrap();
-            let Ok(opcode) = self.mem_mgr.load_u8(_rip) else { return; };
+            let Ok(opcode) = self.mem.load_u8(_rip) else { return; };
             let bytecode = opcode.try_into().expect("Unknown bytecode");
             self.handlers[&bytecode](self);
         }
