@@ -37,6 +37,9 @@ fn init_handlers() -> HashMap<Bytecode, BytecodeHandler> {
     handlers.insert(Bytecode::And, and_handler as BytecodeHandler);
     handlers.insert(Bytecode::Or, or_handler as BytecodeHandler);
     handlers.insert(Bytecode::Not, not_handler as BytecodeHandler);
+    handlers.insert(Bytecode::Push, push_handler as BytecodeHandler);
+    handlers.insert(Bytecode::Pop, pop_handler as BytecodeHandler);
+    handlers.insert(Bytecode::Mov, mov_handler as BytecodeHandler);
 
     return handlers;
 }
@@ -59,6 +62,7 @@ impl VirtualMachine {
 
         vm.mem.alloc(stack_address, 0x1000)?;   // allocating memory for stack
         vm.regs[rsp as usize] = stack_address.try_into()?;
+        vm.regs[rsp as usize] += 0x1000;                 // stack growth to little addresses
         return Ok(vm);
     }
 
