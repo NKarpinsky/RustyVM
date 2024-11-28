@@ -189,4 +189,38 @@ mod vm_tests {
         assert_eq!(vm.regs[2], 0xC0FFEE);
         assert_eq!(vm.regs[3], 0xDEADC0DE);
     }
+
+    #[test]
+    fn mov_reg_reg_program() {
+        let shellcode = vec![0x02, 0x00, 0xde, 0xc0, 0xad, 0xde, 0x00, 0x00, 0x00, 0x00, 0xc2, 0x01, 0x00, 0x01];  // mov r0, 0xDEADCODE -> mov r1, r0
+        let vm = VirtualMachine::from_shellcode(&shellcode);
+        assert!(vm.is_ok());
+        let Ok(mut vm) = vm else {
+            assert!(false);
+            return;
+        };
+        vm.execute();
+
+        assert_eq!(vm.regs[0], 0xDEADC0DE);
+        assert_eq!(vm.regs[1], 0xDEADC0DE);
+    }
+
+    #[test]
+    fn mov_reg_memory_program() {
+        let shellcode = vec![0x02, 0x00, 0x08, 0x00, 0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0xde, 0xc0, 0xad, 0xde, 0x00, 0x00, 0x00, 0x00, // mov r0, 0x500008 -> mov r1, 0xDEADC0DE
+                                      0x82, 0x00, 0x01, 0x42, 0x02, 0x00, 0x01]; // mov [r0], r1 -> mov r2, [r0]
+        let vm = VirtualMachine::from_shellcode(&shellcode);
+        assert!(vm.is_ok());
+        let Ok(mut vm) = vm else {
+            assert!(false);
+            return;
+        };
+        vm.execute();
+
+        // Sanity check
+        assert_eq!(vm.regs[0], 0x500008);
+        assert_eq!(vm.regs[1], 0xDEADC0DE);
+
+        assert_eq!(vm.regs[2], 0xDEADC0DE);
+    }
 }

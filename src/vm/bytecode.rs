@@ -45,6 +45,7 @@ impl TryFrom<u8> for Bytecode {
             x if x == Bytecode::Or as u8 => Ok(Bytecode::Or),
             x if x == Bytecode::Push as u8 => Ok(Bytecode::Push),
             x if x == Bytecode::Pop as u8 => Ok(Bytecode::Pop),
+            x if x == Bytecode::Mov as u8 => Ok(Bytecode::Mov),
             _ => Err(()),
         }
     }
@@ -75,7 +76,39 @@ pub mod handlers {
     pub fn hlt_handler(vm: &mut VirtualMachine) -> () {
         vm.executing = false;
     }
-    pub fn mov_handler(vm: &mut VirtualMachine) -> () {}
+    pub fn mov_handler(vm: &mut VirtualMachine) -> () {
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let bytecode = vm.mem.load_u8(rip).unwrap();
+        let operand_1_is_src = bytecode & 0b1000000; 
+        let operand_2_is_src = bytecode & 0b10000000;
+        let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
+        let reg2_num: usize = vm.mem.load_u8(rip + 2).unwrap().try_into().unwrap();
+        let mut offset = 3;
+        if operand_1_is_src != 0 && operand_2_is_src != 0 {
+            vm.regs[reg1_num] = vm.regs[reg2_num];
+        }
+        if operand_1_is_src != 0 && operand_2_is_src == 0 {
+            let memory = i64::from_le_bytes(
+                vm.mem.load(vm.regs[reg2_num].try_into().unwrap(), 8).unwrap()
+                    .try_into()
+                    .expect("Error: Reading from invalid memory region"),
+            );
+            vm.regs[reg1_num] = memory;
+        }
+        if operand_1_is_src == 0 && operand_2_is_src != 0 {
+            vm.mem.store(vm.regs[reg1_num].try_into().unwrap(), &vm.regs[reg2_num].to_le_bytes()).expect("Error: Writing to invalid memory region");
+        }
+        if operand_1_is_src == 0 && operand_2_is_src == 0 {
+            let constant = i64::from_le_bytes(
+                vm.mem.load(rip + 2, 8).unwrap()
+                    .try_into()
+                    .expect("Error: Reading from invalid memory region"),
+            );
+            vm.regs[reg1_num] = constant;
+            offset = 10;
+        }
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
+    }
 
     pub fn push_handler(vm: &mut VirtualMachine) -> () {
         let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
