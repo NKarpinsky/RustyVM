@@ -81,12 +81,13 @@ pub mod handlers {
         let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let reg_num = vm.mem.load_u8(rip + 1).unwrap();
         let rsp = &mut vm.regs[SpecicalRegisters::rsp as usize];
-        *rsp += 8;
+        *rsp -= 8;
         let address: usize = (*rsp).try_into().unwrap();
         let result = vm.mem.store(address, &vm.regs[reg_num as usize].to_le_bytes());
         if result.is_err() {
             panic!("Stack overflow!");
         }
+        vm.regs[SpecicalRegisters::rip as usize] += 2;
     }
 
     pub fn pop_handler(vm: &mut VirtualMachine) -> () {
@@ -97,9 +98,10 @@ pub mod handlers {
         let Ok(result) = vm.mem.load(address, 8) else {
             panic!("Can not access stack memory!");
         };
-        *rsp -= 8;
+        *rsp += 8;
         let result: i64 = i64::from_le_bytes(result.try_into().unwrap());
         vm.regs[reg_num as usize] = result;
+        vm.regs[SpecicalRegisters::rip as usize] += 2;
     }
 
     pub fn add_handler(vm: &mut VirtualMachine) -> () {

@@ -58,7 +58,7 @@ mod memory_tests {
 #[cfg(test)]
 mod vm_tests {
     use crate::vm::VirtualMachine;
-    use crate::vm::bytecode::SpecicalRegisters::rip;
+    use crate::vm::bytecode::SpecicalRegisters::{rip, rsp};
     use std::fs::File;
     use std::io::Read;
 
@@ -156,5 +156,37 @@ mod vm_tests {
         };
         vm.execute();
         assert_eq!(vm.regs[0], !0xDEADC0DE);
+    }
+
+    #[test]
+    fn run_push_pop_program() {
+        let shellcode = vec![0x43, 0x00, 0xde, 0xc0, 0xad, 0xde, 0x00, 0x00, 0x00, 0x00, 0x0d, 0x00, 0x0e, 0x01, 0x01];
+        let vm = VirtualMachine::from_shellcode(&shellcode);
+        assert!(vm.is_ok());
+        let Ok(mut vm) = vm else {
+            assert!(false);
+            return;
+        };
+        vm.execute();
+        assert_eq!(vm.regs[1], 0xDEADC0DE);
+    }
+
+    #[test]
+    fn many_push_pop_program() {
+        let shellcode = vec![0x43, 0x00, 0xde, 0xc0, 0xad, 0xde, 0x00, 0x00, 0x00, 0x00, 0x43, 0x01, 0xEE, 0xFF, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, // r0 = 0xDEADC0DE, r1 = 0xC0FFEE
+                                               0xd, 0x00, 0xd, 0x01, 0xe, 0x02, 0xe, 0x03, 0x01];
+        let vm = VirtualMachine::from_shellcode(&shellcode);
+        assert!(vm.is_ok());
+        let Ok(mut vm) = vm else {
+            assert!(false);
+            return;
+        };
+        vm.execute();
+        // Sanity check
+        assert_eq!(vm.regs[0], 0xDEADC0DE);
+        assert_eq!(vm.regs[1], 0xC0FFEE);
+
+        assert_eq!(vm.regs[2], 0xC0FFEE);
+        assert_eq!(vm.regs[3], 0xDEADC0DE);
     }
 }

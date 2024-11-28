@@ -61,7 +61,7 @@ impl VirtualMachine {
 
         vm.mem.alloc(stack_address, 0x1000)?;   // allocating memory for stack
         vm.regs[rsp as usize] = stack_address.try_into()?;
-        vm.regs[rsp as usize] -= 0x1000-8;                 // stack growth to little addresses
+        vm.regs[rsp as usize] += 0x1000;                 // stack growth to little addresses
         return Ok(vm);
     }
 
