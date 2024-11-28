@@ -15,5 +15,12 @@ When you constructing shellcode, memory manager always will allocate two section
 - [x] Arithmetic opcodes (add, sub, not, xor, shl, shr, etc.)
 - [x] Memory mapping (stack, heap, etc.)
 - [x] Memory opcodes (mov)
+- [ ] Control flow opcodes (cmp, jmp, je, jne, jge, etc.) 
 - [ ] Interrupts/Syscalls (int)
 - [ ] Simple assembler program
+
+## Architecture
+* Machine has 256 64-bit register
+* You can do any operation with any register
+* Some registers has special meaning (instruction pointer, stack pointer, etc)
+* Flags register can not be accesed by machine operations
