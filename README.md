@@ -24,3 +24,4 @@ When you constructing shellcode, memory manager always will allocate two section
 * You can do any operation with any register
 * Some registers has special meaning (instruction pointer, stack pointer, etc)
 * Flags register can not be accesed by machine operations
+* Now sections don't have access flags, but it could be added in the future
