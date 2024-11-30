@@ -48,6 +48,8 @@ impl TryFrom<u8> for Bytecode {
             x if x == Bytecode::Cmp as u8 => Ok(Bytecode::Cmp),
             x if x == Bytecode::Jmp as u8 => Ok(Bytecode::Jmp),
             x if x == Bytecode::Jc as u8 => Ok(Bytecode::Jc),
+            x if x == Bytecode::Call as u8 => Ok(Bytecode::Call),
+            x if x == Bytecode::Ret as u8 => Ok(Bytecode::Ret),
             _ => Err(()),
         }
     }
@@ -64,6 +66,7 @@ pub enum SpecicalRegisters {
     rsi,
     rbp,
     rsp,
+    rcc,   // Register of Call Control
     rip,
 }
 
@@ -77,6 +80,19 @@ pub mod handlers {
 
     pub fn hlt_handler(vm: &mut VirtualMachine) -> () {
         vm.executing = false;
+    }
+
+    pub fn call_handler(vm: &mut VirtualMachine) -> () {
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let bytecode = vm.mem.load_u8(rip).unwrap();
+        let offset = i64::from_le_bytes(vm.mem.load(rip + 1, 8).unwrap().try_into().unwrap());
+        vm.regs[SpecicalRegisters::rcc as usize] = vm.regs[SpecicalRegisters::rip as usize] + 9;
+        vm.regs[SpecicalRegisters::rip as usize] += offset;
+    }
+
+    pub fn ret_handler(vm: &mut VirtualMachine) -> () {
+        vm.regs[SpecicalRegisters::rip as usize] = vm.regs[SpecicalRegisters::rcc as usize];
+        vm.regs[SpecicalRegisters::rcc as usize] = 0;
     }
 
     pub fn jc_handler(vm: &mut VirtualMachine) -> () {

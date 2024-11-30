@@ -43,6 +43,8 @@ fn init_handlers() -> HashMap<Bytecode, BytecodeHandler> {
     handlers.insert(Bytecode::Cmp, cmp_handler as BytecodeHandler);
     handlers.insert(Bytecode::Jmp, jmp_handler as BytecodeHandler);
     handlers.insert(Bytecode::Jc, jc_handler as BytecodeHandler);
+    handlers.insert(Bytecode::Call, call_handler as BytecodeHandler);
+    handlers.insert(Bytecode::Ret, ret_handler as BytecodeHandler);
 
     return handlers;
 }
