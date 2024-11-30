@@ -82,11 +82,12 @@ pub mod handlers {
     pub fn jc_handler(vm: &mut VirtualMachine) -> () {
         let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.mem.load_u8(rip).unwrap();
-        let offset = i64::from_le_bytes(vm.mem.load(rip + 1, 8).unwrap().try_into().unwrap());
+        let mut offset = 9; 
         if ((bytecode & 0b1000000) >> 6 == vm.rflags & 1) ||
             ((bytecode & 0b10000000) >> 7 == (vm.rflags & 0b10) >> 1) { 
-            vm.regs[SpecicalRegisters::rip as usize] += offset;
-        }
+            offset += i64::from_le_bytes(vm.mem.load(rip + 1, 8).unwrap().try_into().unwrap());
+        }  
+        vm.regs[SpecicalRegisters::rip as usize] += offset; 
     }
 
     pub fn jmp_handler(vm: &mut VirtualMachine) -> () {
