@@ -102,9 +102,8 @@ pub mod handlers {
         let reg2_num: usize = vm.mem.load_u8(rip + 2).unwrap().try_into().unwrap();
         vm.rflags |= (vm.regs[reg1_num] == vm.regs[reg2_num]) as u8;
         vm.rflags |= ((vm.regs[reg1_num] < vm.regs[reg2_num]) as u8) << 1;
-        vm.rflags |= ((vm.regs[reg1_num] > vm.regs[reg2_num]) as u8) << 2;
-        vm.rflags |= ((vm.regs[reg1_num] == 0) as u8) << 3;
-        vm.rflags |= ((vm.regs[reg2_num] == 0) as u8) << 4;
+        vm.rflags |= ((vm.regs[reg1_num] == 0) as u8) << 2;
+        vm.rflags |= ((vm.regs[reg2_num] == 0) as u8) << 3;
         vm.regs[SpecicalRegisters::rip as usize] += 3;
     }
 
