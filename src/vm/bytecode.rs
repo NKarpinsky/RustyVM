@@ -19,10 +19,7 @@ pub enum Bytecode {
     Pop,
     Cmp,
     Jmp,
-    Je,
-    Jne,
-    Jl,
-    Jg,
+    Jc,     // Conditional jump (je, jne, jl, jg, jle, jge)
     Call,
     Ret,
     Int,
@@ -31,8 +28,8 @@ pub enum Bytecode {
 impl TryFrom<u8> for Bytecode {
     type Error = ();
     fn try_from(opcode: u8) -> Result<Self, ()> {
-        let OPCODE_MASK = 0b111111;
-        match opcode & OPCODE_MASK {
+        let opcode_mask = 0b111111;
+        match opcode & opcode_mask {
             x if x == Bytecode::Nop as u8 => Ok(Bytecode::Nop),
             x if x == Bytecode::Hlt as u8 => Ok(Bytecode::Hlt),
             x if x == Bytecode::Mov as u8 => Ok(Bytecode::Mov),
@@ -49,6 +46,8 @@ impl TryFrom<u8> for Bytecode {
             x if x == Bytecode::Pop as u8 => Ok(Bytecode::Pop),
             x if x == Bytecode::Mov as u8 => Ok(Bytecode::Mov),
             x if x == Bytecode::Cmp as u8 => Ok(Bytecode::Cmp),
+            x if x == Bytecode::Jmp as u8 => Ok(Bytecode::Jmp),
+            x if x == Bytecode::Jc as u8 => Ok(Bytecode::Jc),
             _ => Err(()),
         }
     }
@@ -78,6 +77,22 @@ pub mod handlers {
 
     pub fn hlt_handler(vm: &mut VirtualMachine) -> () {
         vm.executing = false;
+    }
+
+    pub fn jc_handler(vm: &mut VirtualMachine) -> () {
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let bytecode = vm.mem.load_u8(rip).unwrap();
+        let offset = i64::from_le_bytes(vm.mem.load(rip + 1, 8).unwrap().try_into().unwrap());
+        if ((bytecode & 0b1000000) >> 6 == vm.rflags & 1) ||
+            ((bytecode & 0b10000000) >> 7 == (vm.rflags & 0b10) >> 1) { 
+            vm.regs[SpecicalRegisters::rip as usize] += offset;
+        }
+    }
+
+    pub fn jmp_handler(vm: &mut VirtualMachine) -> () {
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let offset = i64::from_le_bytes(vm.mem.load(rip + 1, 8).unwrap().try_into().unwrap());
+        vm.regs[SpecicalRegisters::rip as usize] += offset; 
     }
 
     pub fn cmp_handler(vm: &mut VirtualMachine) -> () {
