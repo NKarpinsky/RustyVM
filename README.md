@@ -15,7 +15,7 @@ When you constructing shellcode, memory manager always will allocate two section
 - [x] Arithmetic opcodes (add, sub, not, xor, shl, shr, etc.)
 - [x] Memory mapping (stack, heap, etc.)
 - [x] Memory opcodes (mov)
-- [ ] Control flow opcodes (cmp, jmp, je, jne, jge, etc.) 
+- [x] Control flow opcodes (cmp, jmp, je, jne, jge, etc.) 
 - [ ] Program format and loader
 - [ ] Interrupts/Syscalls (int)
 - [ ] Simple assembler program
