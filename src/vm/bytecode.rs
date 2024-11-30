@@ -23,6 +23,8 @@ pub enum Bytecode {
     Jne,
     Jl,
     Jg,
+    Call,
+    Ret,
     Int,
 }
 
@@ -46,6 +48,7 @@ impl TryFrom<u8> for Bytecode {
             x if x == Bytecode::Push as u8 => Ok(Bytecode::Push),
             x if x == Bytecode::Pop as u8 => Ok(Bytecode::Pop),
             x if x == Bytecode::Mov as u8 => Ok(Bytecode::Mov),
+            x if x == Bytecode::Cmp as u8 => Ok(Bytecode::Cmp),
             _ => Err(()),
         }
     }
@@ -76,6 +79,19 @@ pub mod handlers {
     pub fn hlt_handler(vm: &mut VirtualMachine) -> () {
         vm.executing = false;
     }
+
+    pub fn cmp_handler(vm: &mut VirtualMachine) -> () {
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let reg1_num: usize = vm.mem.load_u8(rip + 1).unwrap().try_into().unwrap();
+        let reg2_num: usize = vm.mem.load_u8(rip + 2).unwrap().try_into().unwrap();
+        vm.rflags |= (vm.regs[reg1_num] == vm.regs[reg2_num]) as u8;
+        vm.rflags |= ((vm.regs[reg1_num] < vm.regs[reg2_num]) as u8) << 1;
+        vm.rflags |= ((vm.regs[reg1_num] > vm.regs[reg2_num]) as u8) << 2;
+        vm.rflags |= ((vm.regs[reg1_num] == 0) as u8) << 3;
+        vm.rflags |= ((vm.regs[reg2_num] == 0) as u8) << 4;
+        vm.regs[SpecicalRegisters::rip as usize] += 3;
+    }
+
     pub fn mov_handler(vm: &mut VirtualMachine) -> () {
         let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.mem.load_u8(rip).unwrap();
