@@ -2,7 +2,6 @@
 
 Simple virtual machine project for learning Rust!
 
-### Currently in progress...
 ## Usage
 ```./rustyvm <path-to-program>```
 ## Memory management
@@ -17,8 +16,8 @@ When you constructing shellcode, memory manager always will allocate two section
 - [x] Memory opcodes (mov)
 - [x] Control flow opcodes (cmp, jmp, je, jne, jge, etc.) 
 - [x] Program format and loader
-- [ ] Interrupts/Syscalls (int)
-- [ ] Simple assembler program
+- [x] Interrupts/Syscalls (int)
+- [ ] Simple assembler program (optional)
 
 ## Architecture
 * Machine has 256 64-bit register
