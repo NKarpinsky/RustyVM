@@ -95,7 +95,7 @@ impl VirtualMachine {
                 mem.store(base_address, &buf[offset..offset+size]);
             }
             if params & 0b10 != 0 {  // STACK
-                stack_address = base_address as i64;
+                stack_address = (base_address + size) as i64;
             }
             if params & 0b100 != 0 { // EXECUTABLE
                 executable_address = base_address as i64;
