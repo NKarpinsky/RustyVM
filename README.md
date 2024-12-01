@@ -17,7 +17,6 @@ When you constructing shellcode, memory manager always will allocate two section
 - [x] Control flow opcodes (cmp, jmp, je, jne, jge, etc.) 
 - [x] Program format and loader
 - [x] Interrupts/Syscalls (int)
-- [ ] Simple assembler program (optional)
 
 ## Architecture
 * Machine has 256 64-bit register
