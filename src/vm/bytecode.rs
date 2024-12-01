@@ -50,6 +50,7 @@ impl TryFrom<u8> for Bytecode {
             x if x == Bytecode::Jc as u8 => Ok(Bytecode::Jc),
             x if x == Bytecode::Call as u8 => Ok(Bytecode::Call),
             x if x == Bytecode::Ret as u8 => Ok(Bytecode::Ret),
+            x if x == Bytecode::Int as u8 => Ok(Bytecode::Int),
             _ => Err(()),
         }
     }
@@ -80,6 +81,13 @@ pub mod handlers {
 
     pub fn hlt_handler(vm: &mut VirtualMachine) -> () {
         vm.executing = false;
+    }
+
+    pub fn int_handler(vm: &mut VirtualMachine) -> () {
+        let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
+        let int_no = vm.mem.load_u8(rip + 1).unwrap();
+        vm.interrupts[&int_no](vm);
+        vm.regs[SpecicalRegisters::rip as usize] += 2;
     }
 
     pub fn call_handler(vm: &mut VirtualMachine) -> () {

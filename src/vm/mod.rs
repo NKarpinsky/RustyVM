@@ -1,22 +1,28 @@
 pub mod bytecode;
 pub mod memory_manager;
+pub mod interrupt;
 
 use std::{error::Error, fs, io::Read};
 use std::collections::HashMap;
 
 use bytecode::{Bytecode, SpecicalRegisters};
 use bytecode::handlers::*;
-use memory_manager::MemoryManager;
 use bytecode::SpecicalRegisters::{rip, rsp};
+
+use interrupt::handlers::*;
+
+use memory_manager::MemoryManager;
 
 
 type BytecodeHandler = fn (&mut VirtualMachine) -> ();
+type InterruptHandler = fn (&mut VirtualMachine) -> ();
 
 pub struct VirtualMachine {
     pub regs: [i64; 256],
     pub rflags: u8,
     executing: bool,
     handlers: HashMap<Bytecode, BytecodeHandler>,
+    interrupts: HashMap<u8, InterruptHandler>,
     mem: MemoryManager
 }
 
@@ -45,8 +51,17 @@ fn init_handlers() -> HashMap<Bytecode, BytecodeHandler> {
     handlers.insert(Bytecode::Jc, jc_handler as BytecodeHandler);
     handlers.insert(Bytecode::Call, call_handler as BytecodeHandler);
     handlers.insert(Bytecode::Ret, ret_handler as BytecodeHandler);
+    handlers.insert(Bytecode::Int, int_handler as BytecodeHandler);
 
     return handlers;
+}
+
+fn init_interrupts() -> HashMap<u8, InterruptHandler> {
+    let mut interrupts = HashMap::new();
+    interrupts.insert(0, int_print as InterruptHandler);
+    interrupts.insert(1, int_read as InterruptHandler);
+
+    return interrupts;
 }
 
 impl VirtualMachine {
@@ -56,6 +71,7 @@ impl VirtualMachine {
             regs: [0; 256],
             rflags: 0,
             handlers: init_handlers(),
+            interrupts: init_interrupts(),
             executing: false,
             mem: Default::default(),
         };
@@ -109,7 +125,8 @@ impl VirtualMachine {
         let mut vm = VirtualMachine {
             regs: [0; 256], 
             rflags: 0, 
-            handlers: init_handlers(), 
+            handlers: init_handlers(),
+            interrupts: init_interrupts(),
             executing: false,
             mem
         };
