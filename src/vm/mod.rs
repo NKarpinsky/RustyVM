@@ -1,6 +1,5 @@
 pub mod bytecode;
 pub mod memory_manager;
-pub mod loader;
 
 use std::{error::Error, fs, io::Read};
 use std::collections::HashMap;
