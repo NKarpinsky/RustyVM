@@ -16,7 +16,7 @@ When you constructing shellcode, memory manager always will allocate two section
 - [x] Memory mapping (stack, heap, etc.)
 - [x] Memory opcodes (mov)
 - [x] Control flow opcodes (cmp, jmp, je, jne, jge, etc.) 
-- [ ] Program format and loader
+- [x] Program format and loader
 - [ ] Interrupts/Syscalls (int)
 - [ ] Simple assembler program
 
