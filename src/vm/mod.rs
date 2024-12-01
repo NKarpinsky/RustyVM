@@ -1,10 +1,11 @@
 pub mod bytecode;
 pub mod memory_manager;
+pub mod loader;
 
 use std::{error::Error, fs, io::Read};
 use std::collections::HashMap;
 
-use bytecode::Bytecode;
+use bytecode::{Bytecode, SpecicalRegisters};
 use bytecode::handlers::*;
 use memory_manager::MemoryManager;
 use bytecode::SpecicalRegisters::{rip, rsp};
@@ -71,16 +72,51 @@ impl VirtualMachine {
         return Ok(vm);
     }
 
-    pub fn new(path: &str) -> Result<VirtualMachine, Box<dyn Error>> {
+    fn load_program(path: &str) -> Result<(MemoryManager, i64, i64), Box<dyn Error>> {
         let mut file = fs::File::open(path)?;
         let mut buf: Vec<u8> = vec![];
         let result = file.read_to_end(&mut buf)?;
-        Ok(VirtualMachine {
+        if !buf.starts_with(b"RVM_") {
+                return Err("Magic is not verified!".into());
+        }
+
+        let count_of_sections = u32::from_le_bytes(buf[4..8].try_into().unwrap()) as usize;
+        let mut mem = MemoryManager::default();
+        let mut stack_address = Default::default();
+        let mut executable_address = Default::default();
+        for i in 0..count_of_sections {
+            let section_info = &buf[8+12*i..8+12*(i+1)];
+            let base_address = usize::from_le_bytes(section_info[..4].try_into().unwrap());
+            let size = usize::from_le_bytes(buf[4..8].try_into().unwrap());
+            let params = usize::from_le_bytes(buf[8..12].try_into().unwrap());
+            mem.alloc(base_address, size)?;
+            if params & 1 == 1 {     // MAPPED
+                let offset = params >> 3;
+                mem.store(base_address, &buf[offset..offset+size]);
+            }
+            if params & 0b10 != 0 {  // STACK
+                stack_address = base_address as i64;
+            }
+            if params & 0b100 != 0 { // EXECUTABLE
+                executable_address = base_address as i64;
+            }
+        }
+
+        return Ok((mem, stack_address, executable_address));
+    }
+
+    pub fn new(path: &str) -> Result<VirtualMachine, Box<dyn Error>> {
+        let (mem, stack_address, executable_address) = VirtualMachine::load_program(path)?;
+        let mut vm = VirtualMachine {
             regs: [0; 256], 
             rflags: 0, 
             handlers: init_handlers(), 
             executing: false,
-            mem: Default::default()})
+            mem
+        };
+        vm.regs[SpecicalRegisters::rsp as usize] = stack_address;
+        vm.regs[SpecicalRegisters::rip as usize] = executable_address;
+        Ok(vm)
     }
 
     pub fn execute(&mut self) {
