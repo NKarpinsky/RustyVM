@@ -67,7 +67,6 @@ pub enum SpecicalRegisters {
     rsi,
     rbp,
     rsp,
-    rcc,   // Register of Call Control
     rip,
 }
 
@@ -94,13 +93,20 @@ pub mod handlers {
         let rip: usize = vm.regs[SpecicalRegisters::rip as usize].try_into().unwrap();
         let bytecode = vm.mem.load_u8(rip).unwrap();
         let offset = i64::from_le_bytes(vm.mem.load(rip + 1, 8).unwrap().try_into().unwrap());
-        vm.regs[SpecicalRegisters::rcc as usize] = vm.regs[SpecicalRegisters::rip as usize] + 9;
+        let sp = vm.regs[SpecicalRegisters::rsp as usize] as usize;
+        
+        vm.mem.store_u64(sp, (vm.regs[SpecicalRegisters::rip as usize] + 9) as u64).unwrap();
+        vm.regs[SpecicalRegisters::rsp as usize] += 8;
+        
         vm.regs[SpecicalRegisters::rip as usize] += offset;
     }
 
     pub fn ret_handler(vm: &mut VirtualMachine) -> () {
-        vm.regs[SpecicalRegisters::rip as usize] = vm.regs[SpecicalRegisters::rcc as usize];
-        vm.regs[SpecicalRegisters::rcc as usize] = 0;
+        let sp = vm.regs[SpecicalRegisters::rsp as usize] as usize;
+        vm.regs[SpecicalRegisters::rsp as usize] -= 8;
+
+        let ip = vm.mem.load_u64(sp).unwrap();
+        vm.regs[SpecicalRegisters::rip as usize] = ip.try_into().unwrap();
     }
 
     pub fn jc_handler(vm: &mut VirtualMachine) -> () {
